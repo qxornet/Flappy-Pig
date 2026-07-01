@@ -1,3 +1,15 @@
 /build
 /app/build
 /app/.cxx
+/.idea/.name
+/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+/.gradle/buildOutputCleanup/cache.properties
+/.gradle/9.4.1/checksums/checksums.lock
+/.gradle/9.4.1/executionHistory/executionHistory.lock
+/.gradle/9.4.1/fileHashes/fileHashes.bin
+/.gradle/9.4.1/fileHashes/fileHashes.lock
+/.gradle/9.4.1/gc.properties
+/.gradle/vcs-1/gc.properties
+/.gradle/9.4.1/fileChanges/last-build.bin
+/.gradle/9.4.1/fileHashes/resourceHashesCache.bin
+/.idea/workspace.xml
