@@ -1,26 +1,22 @@
 #ifndef PUPPY_BIRD_WORLD_H
 #define PUPPY_BIRD_WORLD_H
 
-class Player;
-class Background;
-class Building;
-class Bird;
-class Bomber;
-class Fighter;
-class Meteor;
-
-
-class IEntity;
-
+#include "Entity.h"
 #include <vector>
 
 class World
 {
-private:
-    Background* background;
+public:
+    Background background;
+    Player player;
+    Meteor meteor;
 
-    std::vector<IObject*> objects;
-    std::vector<IEntity*> entities;
+    std::vector<Bird> birds;
+    std::vector<Bomber> bombers;
+    std::vector<Fighter> fighters;
+
+    std::vector<Building> buildings;
+    std::vector<Terrain> terrainPipeline;
 };
 
 

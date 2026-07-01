@@ -63,6 +63,9 @@ void android_main(struct android_app *pApp) {
     // default_key_filter() из android_native_app_glue.c.
     android_app_set_motion_event_filter(pApp, motion_event_filter_func);
 
+    using Clock = std::chrono::steady_clock;
+    auto lastTime = Clock::now();
+
     // Типичный игровой цикл обработки событий.
     // Выполняется до тех пор, пока приложение не будет уничтожено.
     do {
@@ -113,9 +116,13 @@ void android_main(struct android_app *pApp) {
             // Если измените тип userData, не забудьте исправить это место.
             auto *game = reinterpret_cast<Game *>(pApp->userData);
 
+            auto currentTime = Clock::now();
+            float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
+            lastTime = currentTime;
+
             // Обработка пользовательского ввода.
             game->handleInput();
-            game->update(0);
+            game->update(deltaTime);
             game->render();
         }
 

@@ -8,15 +8,16 @@
 #include "AndroidOut.h"
 #include "TextureAsset.h"
 
-Game::Game(android_app *app) : app_(app), renderer(app), assetManager(app->activity->assetManager)
+Game::Game(android_app *app) : application(app), renderer(app), assetManager(app->activity->assetManager)
 {
     loadMeshes();
+    loadSystems();
 }
 
 void Game::handleInput()
 {
     // Обрабатываем все накопленные события ввода.
-    auto *inputBuffer = android_app_swap_input_buffers(app_);
+    auto *inputBuffer = android_app_swap_input_buffers(application);
     if (!inputBuffer) {
         // Событий пока нет.
         return;
@@ -115,11 +116,16 @@ void Game::handleInput()
 
 void Game::update(float dt)
 {
+    for(auto& system : systems)
+        system->update(dt, world);
 
-    std::srand(std::time(0));
+    std::srand(std::time(nullptr));
 
     auto& obj1 = models[0];
     auto& obj2 = models[1];
+
+    obj1.setScale(0.2f);
+    obj2.setScale(0.2f);
 
     obj1.moveX(0.001f);
     if((obj1.getPosition().x-0.5) >= 1.0f) {
@@ -156,8 +162,8 @@ void Game::loadMeshes()
     };
 
     // Загружаем изображение и назначаем его квадрату.
-    auto spAndroidRobotTexture = TextureAsset::loadAsset(assetManager, "android_robot.png");
-    auto spAndroidRobot2Texture = TextureAsset::loadAsset(assetManager, "android_robot.png");
+    auto spAndroidRobotTexture = TextureAsset::loadAsset(assetManager, "bird/run_anim01.png");
+    auto spAndroidRobot2Texture = TextureAsset::loadAsset(assetManager, "bird/run_anim02.png");
 
     meshStorage[EntityId::ePlayer] = std::make_shared<MeshComponent>(vertices, indices);
 
@@ -166,3 +172,12 @@ void Game::loadMeshes()
     models.emplace_back(meshStorage[EntityId::ePlayer], spAndroidRobot2Texture);
 }
 
+void Game::loadSystems()
+{
+    systems.push_back(std::make_unique<MovementSystem>());
+    systems.push_back(std::make_unique<CollisionSystem>());
+    systems.push_back(std::make_unique<AnimationSystem>());
+    systems.push_back(std::make_unique<InputSystem>());
+    systems.push_back(std::make_unique<SpawnSystem>());
+    systems.push_back(std::make_unique<UltimateSystem>());
+}

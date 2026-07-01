@@ -6,7 +6,9 @@
 #define PUPPY_BIRD_GAME_H
 
 #include "Model.h"
+#include "World.h"
 #include "Renderer.h"
+#include "Systems.h"
 
 #include <map>
 
@@ -22,15 +24,19 @@ public:
 private:
 
     void loadMeshes();
+    void loadSystems();
 
 private:
-    android_app *app_;
-    Renderer renderer;
-    std::vector<Model> models;
+    android_app *application;
     AAssetManager *assetManager;
-//    World world;
 
+    Renderer renderer;
+    World world;
+    std::vector<Model> models;
+
+    // упрощенный менеджер мешей
     std::map< EntityId, std::shared_ptr<MeshComponent> > meshStorage;
+    std::vector<std::unique_ptr<ISystem>> systems;
 };
 
 
