@@ -1,7 +1,3 @@
-//
-// Created by ilya on 26.06.2026.
-//
-
 #ifndef PUPPY_BIRD_GAME_H
 #define PUPPY_BIRD_GAME_H
 
@@ -38,6 +34,5 @@ private:
     std::map< EntityId, std::shared_ptr<MeshComponent> > meshStorage;
     std::vector<std::unique_ptr<ISystem>> systems;
 };
-
 
 #endif //PUPPY_BIRD_GAME_H

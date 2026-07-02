@@ -19,5 +19,4 @@ public:
     std::vector<Terrain> terrainPipeline;
 };
 
-
 #endif //PUPPY_BIRD_WORLD_H

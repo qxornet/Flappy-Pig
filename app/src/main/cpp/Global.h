@@ -1,23 +1,13 @@
-//
-// Created by ilya on 26.06.2026.
-//
-
 #ifndef PUPPY_BIRD_GLOBAL_H
 #define PUPPY_BIRD_GLOBAL_H
 
 #include "TextureAsset.h"
 
-enum class EntityId
-{
-    eBackground,
-    ePlayer,
-    eBird,
-    eBomber,
-    eBomb,
-    eFighter,
-    eBuilding,
-    eTerrain,
-    eMeteor
+union Vector4 {
+    struct {
+        float north, west, south, east;
+    };
+    float idx[4];
 };
 
 union Vector3 {
@@ -46,6 +36,5 @@ struct Vertex {
 };
 
 typedef uint16_t Index;
-
 
 #endif //PUPPY_BIRD_GLOBAL_H

@@ -1,7 +1,3 @@
-//
-// Created by ilya on 26.06.2026.
-//
-
 #ifndef PUPPY_BIRD_COMPONENTS_H
 #define PUPPY_BIRD_COMPONENTS_H
 
@@ -9,7 +5,7 @@
 #include <vector>
 
 struct MeshComponent {
-    MeshComponent() {}
+    MeshComponent() = default;
     MeshComponent(std::vector<Vertex> &vertices, std::vector<Index> &indices)
     {
         indexCount = (GLsizei)indices.size();
@@ -53,9 +49,16 @@ struct TransformComponent
     Vector3 scale{1, 1, 1};
 };
 
+struct EventComponent // для управления ивентовыми событиями
+{
+    bool enable;
+    float lastEvent;
+};
+
+
 struct ColliderComponent
 {
-    Vector2 size;
+    Vector4 box;
 };
 
 struct MovementComponent
@@ -65,11 +68,11 @@ struct MovementComponent
 
 struct AnimationComponent
 {
-    int currentFrame;
+    int lastAnimId;
     int frameCount;
 
     float frameTime;
-    float timer;
+    float lastUpdateTime;
 };
 
 struct HealthComponent

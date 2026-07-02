@@ -14,6 +14,7 @@ add_library(flappypig SHARED
         Shader.cpp
         TextureAsset.cpp
         Game.cpp
+        Systems.cpp
         Utility.cpp)
 
 # Searches for a package provided by the game activity dependency

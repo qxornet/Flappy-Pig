@@ -3,6 +3,20 @@
 
 #include "Components.h"
 
+enum class EntityId
+{
+    eBackground,
+    ePlayer,
+    eBird,
+    eBomber,
+    eBomb,
+    eFighter,
+    eBuilding,
+    eTerrain,
+    eMeteor,
+
+    eUnknown
+};
 
 class IEntity
 {
@@ -10,7 +24,9 @@ public:
     virtual ~IEntity() = default;
 
     TransformComponent transform;
-    EntityId id;
+    TransformComponent transform_default;
+    EntityId id = EntityId::eUnknown;
+    bool isEnable = true; // отвечает за взаимодействие Entity с окружающим миром
 };
 
 class Renderable
@@ -23,6 +39,8 @@ public:
 
     std::shared_ptr<MeshComponent> mesh;
     MaterialComponent material;
+    MaterialComponent material_default;
+    bool isShow = false; // отвечает за отображение Entity на сцене
 };
 
 class Background : public IEntity, public Renderable
@@ -42,6 +60,12 @@ public:
 
     MovementComponent movement;
     HealthComponent health;
+    ColliderComponent collision;
+
+    MovementComponent movement_default;
+    HealthComponent health_default;
+    AnimationComponent animation;
+
     //PlayerControllerComponent controller;
 };
 
@@ -52,18 +76,12 @@ public:
         id = EntityId::eBird;
     }
 
-    MovementComponent movement;
-};
-
-class Bomber : public IEntity, public Renderable
-{
-public:
-    Bomber() {
-        id = EntityId::eBomber;
-    }
-
-    MovementComponent movement;
     HealthComponent health;
+    MovementComponent movement;
+    HealthComponent health_default;
+    MovementComponent movement_default;
+    ColliderComponent collision;
+    AnimationComponent animation;
 };
 
 class Bomb : public IEntity, public Renderable
@@ -74,7 +92,27 @@ public:
     }
 
     MovementComponent movement;
+    ColliderComponent collision;
+    bool hasDestroy = false;
 };
+
+class Bomber : public IEntity, public Renderable
+{
+public:
+    Bomber() {
+        id = EntityId::eBomber;
+    }
+
+    ColliderComponent collision;
+    AnimationComponent animation;
+    MovementComponent movement;
+    HealthComponent health;
+    MovementComponent movement_default;
+    HealthComponent health_default;
+
+    Bomb bomb;
+};
+
 
 class Fighter : public IEntity, public Renderable
 {
@@ -83,9 +121,13 @@ public:
         id = EntityId::eFighter;
     }
 
+//    DamageComponent damage;
+    ColliderComponent collision;
+    AnimationComponent animation;
     MovementComponent movement;
     HealthComponent health;
-    DamageComponent damage;
+    HealthComponent health_default;
+    MovementComponent movement_default;
 };
 
 class Building : public IEntity, public Renderable
@@ -95,6 +137,7 @@ public:
         id = EntityId::eBuilding;
     }
     MovementComponent movement;
+    MovementComponent movement_default;
 };
 
 class Terrain : public IEntity, public Renderable
@@ -111,7 +154,13 @@ public:
     Meteor() {
         id = EntityId::eMeteor;
     }
+
+    ColliderComponent collision;
+    AnimationComponent animation;
+    EventComponent event;
     MovementComponent movement;
+    EventComponent event_default;
+    MovementComponent movement_default;
 };
 
 #endif //PUPPY_BIRD_ENTITY_H
