@@ -14,6 +14,7 @@ enum class EntityId
     eBuilding,
     eTerrain,
     eMeteor,
+    eBullets,
 
     eUnknown
 };
@@ -66,7 +67,9 @@ public:
     HealthComponent health_default;
     AnimationComponent animation;
 
-    //PlayerControllerComponent controller;
+    PlayerControllerComponent controller;
+
+    int inputY = 0;
 };
 
 class Bird : public IEntity, public Renderable
@@ -127,6 +130,19 @@ public:
     MovementComponent movement;
     HealthComponent health;
     HealthComponent health_default;
+    MovementComponent movement_default;
+};
+
+class Bullets : public IEntity, public Renderable
+{
+public:
+    Bullets() {
+        id = EntityId::eBullets;
+    }
+
+    ColliderComponent collision;
+    AnimationComponent animation;
+    MovementComponent movement;
     MovementComponent movement_default;
 };
 

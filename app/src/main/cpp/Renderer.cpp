@@ -130,7 +130,7 @@ void Renderer::beginFrame()
         Utility::buildOrthographicMatrix(
                 projectionMatrix,
                 kProjectionHalfHeight,
-                float(width_) / height_,
+                getRatio(),
                 kProjectionNearPlane,
                 kProjectionFarPlane);
 
@@ -251,7 +251,7 @@ void Renderer::initRenderer() {
     // Временно включаем поддержку альфа-смешивания глобально.
     // В реальной игре обычно так делать не стоит.
     glEnable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
+//    glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
@@ -272,4 +272,24 @@ void Renderer::updateRenderArea() {
         // чтобы она была пересоздана перед следующим рендерингом.
         shaderNeedsNewProjectionMatrix_ = true;
     }
+}
+
+int Renderer::getWidth() const
+{
+    return width_;
+}
+
+int Renderer::getHeight() const
+{
+    return height_;
+}
+
+float Renderer::getRatio() const
+{
+    return float(width_) / height_;
+}
+
+float Renderer::getProjectionHalfHeight() const
+{
+    return kProjectionHalfHeight;
 }

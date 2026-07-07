@@ -3,6 +3,17 @@
 
 #include "Global.h"
 #include <vector>
+#include <map>
+#include <string>
+
+enum class AnimationType
+{
+    Idle,
+    Run,
+    Danger,
+    Attack,
+    Die
+};
 
 struct MeshComponent {
     MeshComponent() = default;
@@ -55,6 +66,10 @@ struct EventComponent // для управления ивентовыми соб
     float lastEvent;
 };
 
+struct PlayerControllerComponent
+{
+    float targetDirection = 0.0f;
+};
 
 struct ColliderComponent
 {
@@ -64,15 +79,19 @@ struct ColliderComponent
 struct MovementComponent
 {
     Vector3 velocity;
+    float maxSpeed;
+    float acceleration;
 };
 
 struct AnimationComponent
 {
-    int lastAnimId;
-    int frameCount;
+    AnimationType current = AnimationType::Run;
 
+    int frame = 0;
     float frameTime;
-    float lastUpdateTime;
+    float timer;
+
+    std::unordered_map<AnimationType, std::vector<std::shared_ptr<TextureAsset>>> clips;
 };
 
 struct HealthComponent

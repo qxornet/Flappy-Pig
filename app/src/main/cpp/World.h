@@ -17,6 +17,9 @@ public:
 
     std::vector<Building> buildings;
     std::vector<Terrain> terrainPipeline;
+
+    float borderX = 0.0f;
+    float borderY = 0.0f;
 };
 
 #endif //PUPPY_BIRD_WORLD_H

@@ -20,7 +20,9 @@ public:
 private:
 
     void loadMeshes();
+    void loadTextures();
     void loadSystems();
+    void createWorld();
 
 private:
     android_app *application;
@@ -31,7 +33,8 @@ private:
     std::vector<Model> models;
 
     // упрощенный менеджер мешей
-    std::map< EntityId, std::shared_ptr<MeshComponent> > meshStorage;
+    std::unordered_map<EntityId, std::shared_ptr<MeshComponent>> meshStorage;
+    std::unordered_map<EntityId, AnimationComponent> textureStorage;
     std::vector<std::unique_ptr<ISystem>> systems;
 };
 

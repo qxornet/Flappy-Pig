@@ -12,10 +12,6 @@ struct android_app;
 
 class Renderer {
 public:
-    /*!
-     * @param pApp указатель на android_app, которому принадлежит данный Renderer.
-     * Используется для настройки OpenGL.
-     */
     inline Renderer(android_app *pApp) :
             app_(pApp),
             display_(EGL_NO_DISPLAY),
@@ -29,27 +25,21 @@ public:
 
     virtual ~Renderer();
 
-    /*!
-     * Выполняет отрисовку всех моделей, зарегистрированных в рендерере.
-     */
     void beginFrame();
     void draw(std::shared_ptr<MeshComponent> mesh, const TransformComponent& transform, const MaterialComponent& material);
     void endFrame();
 
-private:
-    /*!
-     * Выполняет необходимую инициализацию OpenGL.
-     * Измените этот метод, если требуется настроить EGL-контекст
-     * или глобальные параметры приложения.
-     */
-    void initRenderer();
+    int getHeight() const;
+    int getWidth() const;
 
-    /*!
-     * @brief Каждый кадр необходимо проверять, не изменился ли размер
-     * буфера кадра (framebuffer). При изменении размера обновляется viewport.
-     */
+    float getRatio() const;
+    float getProjectionHalfHeight() const;
+
+private:
+    void initRenderer();
     void updateRenderArea();
 
+private:
     android_app *app_;
     EGLDisplay display_;
     EGLSurface surface_;

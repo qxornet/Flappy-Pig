@@ -2,9 +2,30 @@
 
 void MovementSystem::update(float dt, World& world)
 {
-    for(auto& bird : world.birds)
+    world.player.movement.velocity.y += world.player.inputY * world.player.movement.acceleration * dt;
+
+    const float damping = 5.0f;
+    if (world.player.inputY == 0)
     {
-        bird.transform.position.x += dt *  bird.movement.velocity.x;
+        world.player.movement.velocity.y *= std::exp(-damping * dt);
+    }
+
+    world.player.movement.velocity.y = std::clamp(
+            world.player.movement.velocity.y,
+            -world.player.movement.maxSpeed,
+            world.player.movement.maxSpeed
+    );
+
+    world.player.transform.position.y += world.player.movement.velocity.y * dt;
+
+    for(auto& bird : world.birds) {
+        if(!bird.isShow || !bird.isEnable) continue;
+        bird.transform.position.x -= dt * bird.movement.velocity.x;
+        if((bird.transform.position.x) <= -world.borderX-0.5f) {
+            bird.transform.position.y = (0.5f + (float)(rand() % 500)/1000.0f); // диапазон 0.5f до 1.0f
+            bird.transform.position.x = (world.borderX+0.5f);
+        }
+
     }
 
     for(auto& bomber : world.bombers)
