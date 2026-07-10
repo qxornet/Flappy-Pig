@@ -11,6 +11,9 @@ enum class AnimationType
     Idle,
     Run,
     Danger,
+    DangerFar,
+    DangerMid,
+    DangerNear,
     Attack,
     Die
 };
@@ -58,6 +61,10 @@ struct TransformComponent
     Vector3 position{0, 0, 0};
     Vector3 rotation{0, 0, 0};
     Vector3 scale{1, 1, 1};
+
+    void setScale(float e_scale) {
+        scale = {e_scale, e_scale, e_scale};
+    }
 };
 
 struct EventComponent // для управления ивентовыми событиями
@@ -78,9 +85,9 @@ struct ColliderComponent
 
 struct MovementComponent
 {
-    Vector3 velocity;
-    float maxSpeed;
-    float acceleration;
+    Vector3 velocity = {0, 0, 0};
+    float maxSpeed = 0;
+    float acceleration = 1.0f;
 };
 
 struct AnimationComponent
@@ -88,8 +95,8 @@ struct AnimationComponent
     AnimationType current = AnimationType::Run;
 
     int frame = 0;
-    float frameTime;
-    float timer;
+    float frameTime = 0;
+    float timer = 0;
 
     std::unordered_map<AnimationType, std::vector<std::shared_ptr<TextureAsset>>> clips;
 };

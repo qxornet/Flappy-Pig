@@ -15,7 +15,8 @@ add_library(flappypig SHARED
         TextureAsset.cpp
         Game.cpp
         Systems.cpp
-        Utility.cpp)
+        Utility.cpp
+        EntityFactory.cpp)
 
 # Searches for a package provided by the game activity dependency
 find_package(game-activity REQUIRED CONFIG)

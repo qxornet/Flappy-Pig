@@ -7,9 +7,12 @@
 #include "Game.h"
 #include "AndroidOut.h"
 #include "TextureAsset.h"
+#include "EntityFactory.h"
 
 Game::Game(android_app *app) : application(app), renderer(app), assetManager(app->activity->assetManager)
 {
+    std::srand(std::time(nullptr));
+
     loadMeshes();
     loadTextures();
     loadSystems();
@@ -34,7 +37,7 @@ void Game::handleInput()
 
         auto pointerIndex = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK)
                 >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
-        aout << "Pointer(s): ";
+//        aout << "Pointer(s): ";
 
         auto &pointer = motionEvent.pointers[pointerIndex];
         auto x = GameActivityPointerAxes_getX(&pointer);
@@ -55,9 +58,9 @@ void Game::handleInput()
                 world.player.inputY = 0;
                 break;
             default:
-                aout << "Unknown MotionEvent Action: " << action;
+//                aout << "Unknown MotionEvent Action: " << action;
         }
-        aout << std::endl;
+//        aout << std::endl;
     }
 
     // Очищаем список событий движения,
@@ -67,22 +70,22 @@ void Game::handleInput()
     // Обрабатываем события клавиатуры.
     for (auto i = 0; i < inputBuffer->keyEventsCount; i++) {
         auto &keyEvent = inputBuffer->keyEvents[i];
-        aout << "Key: " << keyEvent.keyCode <<" ";
+//        aout << "Key: " << keyEvent.keyCode <<" ";
         switch (keyEvent.action) {
             case AKEY_EVENT_ACTION_DOWN:
-                aout << "Key Down";
+//                aout << "Key Down";
                 break;
             case AKEY_EVENT_ACTION_UP:
-                aout << "Key Up";
+//                aout << "Key Up";
                 break;
             case AKEY_EVENT_ACTION_MULTIPLE:
                 // Устарело начиная с Android API 29.
-                aout << "Multiple Key Actions";
+//                aout << "Multiple Key Actions";
                 break;
             default:
-                aout << "Unknown KeyEvent Action: " << keyEvent.action;
+//                aout << "Unknown KeyEvent Action: " << keyEvent.action;
         }
-        aout << std::endl;
+//        aout << std::endl;
     }
     // Также очищаем список событий клавиатуры.
     android_app_clear_key_events(inputBuffer);
@@ -109,31 +112,45 @@ void Game::render()
         if(!bird.isShow) continue;
         renderer.draw(bird.mesh, bird.transform, bird.material);
     }
+
+    for(auto &bomber : world.bombers) {
+        if(!bomber.isShow) continue;
+        renderer.draw(bomber.mesh, bomber.transform, bomber.material);
+    }
+
     renderer.endFrame();
 }
 
 void Game::loadMeshes()
 {
     std::vector<Vertex> vertices = {
-            Vertex(Vector3{0.5, 0.5, 1}, Vector2{0, 0}), // 0
-            Vertex(Vector3{-0.5, 0.5, 1}, Vector2{1, 0}), // 1
-            Vertex(Vector3{-0.5, -0.5, 1}, Vector2{1, 1}), // 2
-            Vertex(Vector3{0.5, -0.5, 1}, Vector2{0, 1}) // 3
+            Vertex(Vector3{0.5, 0.5, 1}, Vector2{0, 0}),
+            Vertex(Vector3{-0.5, 0.5, 1}, Vector2{1, 0}),
+            Vertex(Vector3{-0.5, -0.5, 1}, Vector2{1, 1}),
+            Vertex(Vector3{0.5, -0.5, 1}, Vector2{0, 1})
     };
 
     std::vector<Vertex> playerVertices = {
-            Vertex(Vector3{0.5, 0.5, 1}, Vector2{1, 0}), // 0
-            Vertex(Vector3{-0.5, 0.5, 1}, Vector2{0, 0}), // 1
-            Vertex(Vector3{-0.5, -0.5, 1}, Vector2{0, 1}), // 2
-            Vertex(Vector3{0.5, -0.5, 1}, Vector2{1, 1}) // 3
+            Vertex(Vector3{0.5, 0.5, 1}, Vector2{1, 0}),
+            Vertex(Vector3{-0.5, 0.5, 1}, Vector2{0, 0}),
+            Vertex(Vector3{-0.5, -0.5, 1}, Vector2{0, 1}),
+            Vertex(Vector3{0.5, -0.5, 1}, Vector2{1, 1})
     };
 
     std::vector<Vertex> backgroundVertices = {
-            Vertex(Vector3{1, 1, 0}, Vector2{1, 0}), // 0
-            Vertex(Vector3{-3, 1, 0}, Vector2{0, 0}), // 1
-            Vertex(Vector3{-3, -1, 0}, Vector2{0, 1}), // 2
-            Vertex(Vector3{1, -1, 0}, Vector2{1, 1}) // 3
+            Vertex(Vector3{1, 1, 0}, Vector2{1, 0}),
+            Vertex(Vector3{-3, 1, 0}, Vector2{0, 0}),
+            Vertex(Vector3{-3, -1, 0}, Vector2{0, 1}),
+            Vertex(Vector3{1, -1, 0}, Vector2{1, 1})
     };
+
+    std::vector<Vertex> bomberVertices = {
+            Vertex(Vector3{1, 1, 0}, Vector2{1, 0}),
+            Vertex(Vector3{-2.5, 1, 0}, Vector2{0, 0}),
+            Vertex(Vector3{-2.5, -1, 0}, Vector2{0, 1}),
+            Vertex(Vector3{1, -1, 0}, Vector2{1, 1})
+    };
+
 
     std::vector<Index> indices = {
             0, 1, 2, 0, 2, 3
@@ -145,7 +162,7 @@ void Game::loadMeshes()
     meshStorage[EntityId::eBomber] = std::make_shared<MeshComponent>(vertices, indices);
     meshStorage[EntityId::eFighter] = std::make_shared<MeshComponent>(vertices, indices);
     meshStorage[EntityId::eMeteor] = std::make_shared<MeshComponent>(vertices, indices);
-    meshStorage[EntityId::eBomber] = std::make_shared<MeshComponent>(vertices, indices);
+    meshStorage[EntityId::eBomber] = std::make_shared<MeshComponent>(bomberVertices, indices);
     meshStorage[EntityId::eBomb] = std::make_shared<MeshComponent>(vertices, indices);
     meshStorage[EntityId::eBullets] = std::make_shared<MeshComponent>(vertices, indices);
     meshStorage[EntityId::eTerrain] = std::make_shared<MeshComponent>(vertices, indices);
@@ -159,7 +176,6 @@ void Game::loadTextures()
     textureStorage[EntityId::eBackground] = backgroundTextures;
 
     AnimationComponent playerTextures;
-    playerTextures.frameTime = 100; // сменять текстуру раз в 100мс
     playerTextures.current = AnimationType::Run;
     playerTextures.frame = 0;
     playerTextures.clips[AnimationType::Run] = {
@@ -170,7 +186,6 @@ void Game::loadTextures()
     textureStorage[EntityId::ePlayer] = playerTextures;
 
     AnimationComponent birdTextures;
-    birdTextures.frameTime = 150;
     birdTextures.current = AnimationType::Run;
     birdTextures.frame = 0;
     birdTextures.clips[AnimationType::Run] = {
@@ -178,52 +193,54 @@ void Game::loadTextures()
             TextureAsset::loadAsset(assetManager, "bird/run_anim02.png"),
             TextureAsset::loadAsset(assetManager, "bird/run_anim03.png"),
     };
-    birdTextures.clips[AnimationType::Danger] = {
+    birdTextures.clips[AnimationType::DangerFar] = {
             TextureAsset::loadAsset(assetManager, "bird/danger_anim01.png"),
+    };
+    birdTextures.clips[AnimationType::DangerMid] = {
             TextureAsset::loadAsset(assetManager, "bird/danger_anim02.png"),
+    };
+    birdTextures.clips[AnimationType::DangerNear] = {
             TextureAsset::loadAsset(assetManager, "bird/danger_anim03.png"),
     };
     birdTextures.clips[AnimationType::Die] = {
             TextureAsset::loadAsset(assetManager, "bird/death_anim01.png"),
     };
     textureStorage[EntityId::eBird] = birdTextures;
+
+    AnimationComponent bomberTextures;
+    bomberTextures.current = AnimationType::Run;
+    bomberTextures.frame = 0;
+    bomberTextures.clips[AnimationType::Run] = {
+            TextureAsset::loadAsset(assetManager, "bomber/run_without_bomb_anim01.png"),
+            TextureAsset::loadAsset(assetManager, "bomber/run_without_bomb_anim02.png")
+    };
+    bomberTextures.clips[AnimationType::Danger] = {
+            TextureAsset::loadAsset(assetManager, "bomber/danger_without_bomb_anim01.png")
+    };
+    textureStorage[EntityId::eBomber] = bomberTextures;
 }
 
 void Game::createWorld()
 {
-    // загурзка бекграунда
-    world.background.mesh = meshStorage[EntityId::eBackground];
-    world.background.transform.scale = {2.5f, 2.5f, 2.5f};
-    world.background.transform.position.x = 2.5f;
-    world.background.transform.position.y = 0.5f;
-    world.background.material = textureStorage[EntityId::eBackground].clips[AnimationType::Idle][0];
+    EntityFactory factory(meshStorage, textureStorage);
 
-    // загрузка игрока
-    world.player.mesh = meshStorage[EntityId::ePlayer];
-    world.player.material.texture = textureStorage[EntityId::ePlayer].clips[AnimationType::Run][0];
-    world.player.animation = textureStorage[EntityId::ePlayer];
-    world.player.transform.scale = {.45f, .45f, .45f};
-    world.player.transform.position.x = -0.5f;
-    world.player.health.points = 100;
-    world.player.health.max_points = 100;
-    world.player.movement.maxSpeed = 2.5f;
-    world.player.movement.velocity.y = 1.0f;
+    world.background = factory.createBackground();
+    world.player = factory.createPlayer();
 
-    std::srand(std::time(nullptr));
-    for(int i = 0; i < 50; i++) {
-        Bird bird;
-        bird.mesh = meshStorage[EntityId::eBird];
-        bird.material.texture = textureStorage[EntityId::eBird].clips[AnimationType::Run][0 + (rand() % 2)];
-        bird.animation = textureStorage[EntityId::eBird];
-        bird.transform.scale = {0.15f, 0.15f, 0.15f};
-        bird.transform.position.z = 2.0f;
-        bird.health.points = 1;
-        bird.health.max_points = 1;
-        bird.movement.velocity.x = 0.3f;
-        bird.movement.maxSpeed = 1.5f;
-        bird.isShow = true;
-        if(i >= 2) bird.isShow = false;
-        world.birds.push_back(bird);
+    world.birds.reserve(100);
+    for (int i = 0; i < 100; ++i)
+    {
+        auto bird = factory.createBird();
+        bird.isShow = (i < 2);
+        world.birds.push_back(std::move(bird));
+    }
+
+    world.bombers.reserve(50);
+    for (int i = 0; i < 50; ++i)
+    {
+        auto bomber = factory.createBomber();
+        bomber.isShow = (i < 1);
+        world.bombers.push_back(std::move(bomber));
     }
 }
 
@@ -236,4 +253,5 @@ void Game::loadSystems()
     systems.push_back(std::make_unique<SpawnSystem>());
     systems.push_back(std::make_unique<UltimateSystem>());
     systems.push_back(std::make_unique<EventSystem>());
+    systems.push_back(std::make_unique<HealthSystem>());
 }
