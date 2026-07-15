@@ -41,11 +41,32 @@ struct MeshComponent {
                 indices.data(),
                 GL_STATIC_DRAW
         );
+
+        minX = maxX = vertices[0].position.x;
+        minY = maxY = vertices[0].position.y;
+
+        for (const auto& v : vertices)
+        {
+            minX = std::min(minX, v.position.x);
+            maxX = std::max(maxX, v.position.x);
+
+            minY = std::min(minY, v.position.y);
+            maxY = std::max(maxY, v.position.y);
+        }
+
+        width = maxX - minX;
+        height = maxY - minY;
     }
 
     GLuint vbo = 0;
     GLuint ebo = 0;
     GLsizei indexCount = 0;
+
+    float minX, maxX;
+    float minY, maxY;
+
+    float width;
+    float height;
 };
 
 struct MaterialComponent {
@@ -75,7 +96,7 @@ struct EventComponent // для управления ивентовыми соб
 
 struct PlayerControllerComponent
 {
-    float targetDirection = 0.0f;
+    int targetDirection = 0.0f;
 };
 
 struct ColliderComponent
@@ -112,10 +133,34 @@ struct DamageComponent
     int value;
 };
 
+struct AttackCompoment
+{
+    int maxCount = 0;
+    int count = 0;
+    float cooldown = 0.0f;
+    float cooldownTimer = 0.0f;
+    float interval = 0.0f;
+    float intervalTimer = 0.0f;
+
+    bool shooting = false;
+};
+
 struct UltimateComponent
 {
     float points;
     bool enable;
+};
+
+
+struct SpawnComponent
+{
+    float spawnTime;
+    float timer;
+};
+
+struct GamePointsComponent
+{
+    int count = 0;
 };
 
 #endif //PUPPY_BIRD_COMPONENTS_H

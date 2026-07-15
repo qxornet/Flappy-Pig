@@ -7,50 +7,47 @@ class ISystem
 {
 public:
     virtual ~ISystem() = default;
-    virtual void update(float dt, World& world) = 0;
+    virtual void update(float dt, World& world, GameState &state) = 0;
 };
 
 class MovementSystem : public ISystem
 {
-    void update(float dt, World& world) override;
+    void update(float dt, World& world, GameState &state) override;
 };
 
 class CollisionSystem : public ISystem
 {
-    void update(float dt, World& world) override;
+    void update(float dt, World& world, GameState &state) override;
 };
 
 class InputSystem : public ISystem
 {
-    void update(float dt, World& world) override;
+    void update(float dt, World& world, GameState &state) override;
 };
 
 class HealthSystem : public ISystem
 {
-    void update(float dt, World& world) override;
+    void update(float dt, World& world, GameState &state) override;
 };
 
 class SpawnSystem : public ISystem
 {
-    // данный класс отвечает скорее не за создание entity, а за reset компонентов и свойств
-    void update(float dt, World& world) override;
+    void update(float dt, World& world, GameState &state) override;
 };
 
 class AnimationSystem : public ISystem
 {
-    // проверить условия задания определенной текстуры, если не выполнено, то вызвать смену текстуры раз в switch time на текущем behaivor, данные брать из AnimationComponent
-    // под "условиямм задания определенной текстуры" понимаются энкаунтеры или смерть actor'а
-    void update(float dt, World& world) override;
+    void update(float dt, World& world, GameState &state) override;
 };
 
 class EventSystem : public ISystem
 {
-    void update(float dt, World& world) override;
+    void update(float dt, World& world, GameState &state) override;
 };
 
 class UltimateSystem : public ISystem
 {
-    void update(float dt, World& world) override;
+    void update(float dt, World& world, GameState &state) override;
 };
 
 #endif //FLAPPY_PIG_SYSTEMS_H

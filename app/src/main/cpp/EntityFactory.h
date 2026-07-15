@@ -14,6 +14,8 @@ public:
     Bird createBird();
     Bomber createBomber();
     Fighter createFighter();
+    Bullet createEnemyBullet();
+    Bullet createPlayerBullet();
     Meteor createMeteor();
 
 private:

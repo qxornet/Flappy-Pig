@@ -8,6 +8,7 @@ class World
 {
 public:
     Background background;
+    Background secondBackground; // немного костыль, нужный для создания эффекта движения в пространстве
     Player player;
     Meteor meteor;
 
@@ -17,6 +18,9 @@ public:
 
     std::vector<Building> buildings;
     std::vector<Terrain> terrainPipeline;
+
+    std::vector<Bullet> playerBullets;
+    std::vector<Bullet> enemyBullets;
 
     float borderX = 0.0f;
     float borderY = 0.0f;

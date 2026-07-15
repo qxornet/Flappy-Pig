@@ -1,10 +1,10 @@
 #ifndef PUPPY_BIRD_GAME_H
 #define PUPPY_BIRD_GAME_H
 
-#include "Model.h"
 #include "World.h"
 #include "Renderer.h"
 #include "Systems.h"
+#include "UIElements.h"
 
 #include <map>
 
@@ -24,18 +24,27 @@ private:
     void loadSystems();
     void createWorld();
 
+    void drawMainMenu();
+    void drawGameOver();
+    void drawPlayingControls();
+
 private:
     android_app *application;
     AAssetManager *assetManager;
 
     Renderer renderer;
     World world;
-    std::vector<Model> models;
 
     // упрощенный менеджер мешей
     std::unordered_map<EntityId, std::shared_ptr<MeshComponent>> meshStorage;
     std::unordered_map<EntityId, AnimationComponent> textureStorage;
     std::vector<std::unique_ptr<ISystem>> systems;
+
+    GameState gameState = GameState::MainMenu;
+
+    std::vector<Button> mainMenuButtons;
+    std::vector<Button> gameoverButtons;
+    Button attackControl;
 };
 
 #endif //PUPPY_BIRD_GAME_H

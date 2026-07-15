@@ -4,7 +4,6 @@
 #include <EGL/egl.h>
 #include <memory>
 
-#include "Model.h"
 #include "Shader.h"
 #include "Components.h"
 

@@ -4,27 +4,22 @@
 #include <limits>
 #include <cmath>
 
-bool checkCollisionWithPlayer(
-        const ColliderComponent& collider,
-        const TransformComponent& transform,
-        const Player& player)
+bool checkCollision(
+        const ColliderComponent& a_collider,
+        const TransformComponent& a_transform,
+        const ColliderComponent& b_collider,
+        const TransformComponent& b_transform)
 {
-    const auto& playerBox = player.collision.box;
-    const auto& playerTransform = player.transform;
+    const float leftA   = a_transform.position.x + a_collider.box.west  * a_transform.scale.x;
+    const float rightA  = a_transform.position.x + a_collider.box.east  * a_transform.scale.x;
+    const float topA    = a_transform.position.y + a_collider.box.north * a_transform.scale.y;
+    const float bottomA = a_transform.position.y + a_collider.box.south * a_transform.scale.y;
 
-    // Границы текущего объекта
-    const float leftA   = transform.position.x + collider.box.west  * transform.scale.x;
-    const float rightA  = transform.position.x + collider.box.east  * transform.scale.x;
-    const float topA    = transform.position.y + collider.box.north * transform.scale.y;
-    const float bottomA = transform.position.y + collider.box.south * transform.scale.y;
+    const float leftB   = b_transform.position.x + b_collider.box.west  * b_transform.scale.x;
+    const float rightB  = b_transform.position.x + b_collider.box.east  * b_transform.scale.x;
+    const float topB    = b_transform.position.y + b_collider.box.north * b_transform.scale.y;
+    const float bottomB = b_transform.position.y + b_collider.box.south * b_transform.scale.y;
 
-    // Границы игрока
-    const float leftB   = playerTransform.position.x + playerBox.west  * playerTransform.scale.x;
-    const float rightB  = playerTransform.position.x + playerBox.east  * playerTransform.scale.x;
-    const float topB    = playerTransform.position.y + playerBox.north * playerTransform.scale.y;
-    const float bottomB = playerTransform.position.y + playerBox.south * playerTransform.scale.y;
-
-    // AABB-пересечение
     return !(leftA > rightB ||
              rightA < leftB ||
              bottomA > topB ||
@@ -55,15 +50,36 @@ float distanceToPlayer(
     return std::abs(transform.position.x - playerTransform.position.x);
 }
 
-void MovementSystem::update(float dt, World& world)
+void MovementSystem::update(float dt, World& world, GameState &state)
 {
+    if(state == GameState::GameOver) return;
+
+    const float bgWidth = world.background.mesh->width * world.background.transform.scale.x;
+
+    world.background.transform.position.x -= 0.001f;
+    world.secondBackground.transform.position.x -= 0.001f;
+
+    if (world.background.transform.position.x <= -bgWidth)
+    {
+        world.background.transform.position.x =
+                world.secondBackground.transform.position.x + bgWidth;
+    }
+
+    if (world.secondBackground.transform.position.x <= -bgWidth)
+    {
+        world.secondBackground.transform.position.x =
+                world.background.transform.position.x + bgWidth;
+    }
+
+    if(state != GameState::Playing) return;
+
     if(world.player.isEnable) {
         world.player.transform.position.x = -(world.borderX / 3);
         world.player.movement.velocity.y +=
-                world.player.inputY * world.player.movement.acceleration * dt;
+                world.player.controller.targetDirection * world.player.movement.acceleration * dt;
 
         const float damping = 5.0f;
-        if (world.player.inputY == 0) {
+        if (world.player.controller.targetDirection == 0) {
             world.player.movement.velocity.y *= std::exp(-damping * dt);
         }
 
@@ -74,11 +90,11 @@ void MovementSystem::update(float dt, World& world)
         );
 
         world.player.transform.position.y += world.player.movement.velocity.y * dt;
-        if (world.player.transform.position.y >= world.borderY - world.player.transform.scale.y)
-            world.player.transform.position.y = world.borderY - world.player.transform.scale.y;
+        if (world.player.transform.position.y >= world.borderY - 0.2f)
+            world.player.transform.position.y = world.borderY - 0.2f;
 
-        if (world.player.transform.position.y <= -world.borderY + world.player.transform.scale.y)
-            world.player.transform.position.y = -world.borderY + world.player.transform.scale.y;
+        if (world.player.transform.position.y <= -world.borderY + 0.2f)
+            world.player.transform.position.y = -world.borderY + 0.2f;
     }
 
     const float minBirdY = -world.borderY + 0.2f;
@@ -132,7 +148,7 @@ void MovementSystem::update(float dt, World& world)
         bomber.transform.position.x -= dt *  bomber.movement.velocity.x;
         if(-world.borderX-.2f > bomber.transform.position.x) {
             bomber.transform = bomber.transform_default;
-            bomber.transform.position.y = (1.0f + (float)(rand() % 500)/1000.0f); // диапазон 0.5f до 1.0f
+            bomber.transform.position.y = (1.0f + (float)(rand() % 500)/1000.0f);
         }
 
         // обновляем стартовую позицию бомбы, пока она невидима
@@ -145,18 +161,69 @@ void MovementSystem::update(float dt, World& world)
         bomber.bomb.transform.position.y -= dt *  bomber.bomb.movement.velocity.y;
     }
 
-    for(auto& fighter : world.fighters)
+    for (auto& fighter : world.fighters)
     {
-        // добавить условие (раз в n времен истребитель струляет тремя bullets)
-        fighter.transform.position.x += dt *  fighter.movement.velocity.x;
+        if (!fighter.isShow || !fighter.isEnable)
+            continue;
+
+        fighter.transform.position.x -= fighter.movement.velocity.x * dt;
+
+        if (fighter.transform.position.x > world.player.transform.position.x)
+        {
+            float dy = world.player.transform.position.y - fighter.transform.position.y;
+
+            constexpr float followSpeed = 2.0f;
+
+            fighter.movement.velocity.y = std::clamp(
+                    dy * followSpeed,
+                    -fighter.movement.maxSpeed,
+                    fighter.movement.maxSpeed);
+        }
+
+        fighter.transform.position.y += fighter.movement.velocity.y * dt;
+
+        if(-world.borderX-.2f > fighter.transform.position.x) {
+            fighter.transform = fighter.transform_default;
+            fighter.transform.position.y = (0.0f + (float)(rand() % 500)/1000.0f);
+        }
     }
 
-    world.meteor.transform.position.x += dt * world.meteor.movement.velocity.x;
-    world.meteor.transform.position.y += dt * world.meteor.movement.velocity.y;
+    for(auto &bullet : world.enemyBullets)
+    {
+        if(!bullet.isEnable || !bullet.isShow)
+            continue;
+
+        bullet.transform.position.x -= dt * bullet.movement.velocity.x;
+
+        if(bullet.transform.position.x > -world.borderX-0.5f) continue;
+        bullet.isEnable = false;
+        bullet.isShow = false;
+    }
+
+    for(auto &bullet : world.playerBullets)
+    {
+        if(!bullet.isEnable || !bullet.isShow)
+            continue;
+
+        bullet.transform.position.x += dt * bullet.movement.velocity.x;
+
+        if(bullet.transform.position.x < world.borderX+0.5f) continue;
+        bullet.isEnable = false;
+        bullet.isShow = false;
+    }
+
+//    world.meteor.transform.position.x += dt * world.meteor.movement.velocity.x;
+//    world.meteor.transform.position.y += dt * world.meteor.movement.velocity.y;
 }
 
-void CollisionSystem::update(float dt, World& world)
+void CollisionSystem::update(float dt, World& world, GameState &state)
 {
+    if(state != GameState::Playing) return;
+
+    if (world.player.transform.position.y <= -world.borderY + 0.2f) {
+        world.player.health.points = 0;
+    }
+
     for(auto &bird : world.birds)
     {
         if(!bird.isShow || !bird.isEnable) continue;
@@ -175,7 +242,8 @@ void CollisionSystem::update(float dt, World& world)
         else
             bird.animation.current = AnimationType::DangerNear;
 
-        if(checkCollisionWithPlayer(bird.collision, bird.transform, world.player)) {
+        if(checkCollision(bird.collision, bird.transform,
+                          world.player.collision, world.player.transform)) {
             world.player.health.points = 0;
             bird.health.points = 0;
             bird.animation.current = AnimationType::Die;
@@ -196,49 +264,160 @@ void CollisionSystem::update(float dt, World& world)
         else
             bomber.animation.current = AnimationType::Danger;
 
-        if(checkCollisionWithPlayer(bomber.collision, bomber.transform, world.player)) {
+        if(checkCollision(bomber.collision, bomber.transform,
+                                    world.player.collision, world.player.transform)) {
             world.player.health.points = 0;
             bomber.health.points = 0;
             bomber.animation.current = AnimationType::Die;
         };
 
-//        if(world.player.collision.box.east ==  bomber.collision.box.west)
-//            world.player.health.points = 0;
-
-//        // проверяем, если объект доступен, то коллизию можно проверять
-//        if(!bomber.bomb.isEnable) continue;
-//        if(world.player.collision.box.east ==  bomber.bomb.collision.box.west ||
-//           world.player.collision.box.south ==  bomber.bomb.collision.box.north) {
-//            // добавить доп. условие на проверку достижения земли, если достигла - мы задаем health = 0 и объект уничтожается
-//            world.player.health.points = 0;
-//            bomber.bomb.hasDestroy = true;
-//        }
+        for(auto &bullet : world.playerBullets)
+        {
+            if(!bullet.isEnable || !bullet.isShow) continue;
+            if(checkCollision(bomber.collision, bomber.transform,
+                              bullet.collision, bullet.transform)) {
+                bomber.health.points = 0;
+                bomber.animation.current = AnimationType::Die;
+                bullet.isEnable = false;
+                bullet.isShow = false;
+            };
+        }
     }
 
-    for(auto &fighter : world.fighters)
+    for (auto& fighter : world.fighters)
     {
-        if(world.player.collision.box.east ==  fighter.collision.box.west) {
+        if (!fighter.isShow || !fighter.isEnable)
+            continue;
+
+
+        float dist = distanceToPlayer(
+                fighter.collision,
+                fighter.transform,
+                world.player);
+
+        if (dist > 1.0f)
+            fighter.animation.current = AnimationType::Run;
+//        else
+//            fighter.animation.current = AnimationType::Danger;
+
+        if(checkCollision(fighter.collision, fighter.transform,
+                                    world.player.collision, world.player.transform)) {
             world.player.health.points = 0;
             fighter.health.points = 0;
+            fighter.animation.current = AnimationType::Die;
+        };
+
+        for(auto &bullet : world.playerBullets)
+        {
+            if(!bullet.isEnable || !bullet.isShow) continue;
+            if(checkCollision(fighter.collision, fighter.transform,
+                              bullet.collision, bullet.transform)) {
+                fighter.health.points = 0;
+                fighter.animation.current = AnimationType::Die;
+                bullet.isEnable = false;
+                bullet.isShow = false;
+            };
+        }
+    }
+
+    for(auto &bullet : world.enemyBullets)
+    {
+        if(checkCollision(bullet.collision, bullet.transform,
+                                    world.player.collision, world.player.transform)) {
+            world.player.health.points = 0;
+            bullet.isEnable = false;
+            bullet.isShow = false;
+        };
+    }
+}
+
+void InputSystem::update(float dt, World& world, GameState &state)
+{
+    if(state != GameState::Playing) return;
+
+    world.player.attack.intervalTimer += dt;
+    if(world.player.attack.shooting)
+    {
+        if(world.player.attack.intervalTimer >= world.player.attack.interval) {
+            if(world.player.attack.count >= world.player.attack.maxCount)
+                world.player.attack.count = 0;
+
+            int bulletIdx = world.player.attack.count;
+            world.playerBullets[bulletIdx].transform.position = world.player.transform.position;
+            world.playerBullets[bulletIdx].transform.position.y -= 0.06f;
+            world.playerBullets[bulletIdx].isEnable = true;
+            world.playerBullets[bulletIdx].isShow = true;
+            world.player.attack.intervalTimer = 0;
+            world.player.attack.count++;
         }
     }
 }
 
-void InputSystem::update(float dt, World& world)
+void SpawnSystem::update(float dt, World& world, GameState &state)
 {
+    if(state != GameState::Playing) return;
 
+    float birdSpawnAccum = 0.0f;
+    for(auto &bird : world.birds) {
+        birdSpawnAccum += bird.spawn.spawnTime;
+        if(bird.isEnable || bird.isShow) continue;
+
+        bird.spawn.timer += dt;
+        if(bird.spawn.timer >= birdSpawnAccum) {
+            bird.isEnable = true;
+            bird.isShow = true;
+            bird.movement.velocity.y = -0.4f + (float)(rand() % 800) / 1000.0f; // [-0.4; 0.4]
+        }
+
+        if(!bird.health.points) {
+            bird.health = bird.health_default;
+        }
+    }
+
+    float bomberSpawnAccum = 0.0f;
+    for(auto &bomber : world.bombers) {
+        bomberSpawnAccum += bomber.spawn.spawnTime;
+        if(bomber.isEnable || bomber.isShow) continue;
+
+        bomber.spawn.timer += dt;
+        if(bomber.spawn.timer >= bomberSpawnAccum) {
+            bomber.isEnable = true;
+            bomber.isShow = true;
+            bomber.transform.position.y = (1.0f + (float)(rand() % 500)/1000.0f);
+        }
+
+        if(!bomber.health.points) {
+            bomber.health = bomber.health_default;
+        }
+    }
+
+    float fighterSpawnAccum = 0.0f;
+    for(auto &fighter : world.fighters) {
+        fighterSpawnAccum += fighter.spawn.spawnTime;
+        if(fighter.isEnable || fighter.isShow) continue;
+
+        fighter.spawn.timer += dt;
+        if(fighter.spawn.timer >= fighterSpawnAccum) {
+            fighter.isEnable = true;
+            fighter.isShow = true;
+            fighter.spawn.timer = 0;
+            fighter.transform.position.y = (0.0f + (float)(rand() % 500)/1000.0f);
+        }
+
+        if(!fighter.health.points) {
+            fighter.health = fighter.health_default;
+        }
+    }
 }
 
-void SpawnSystem::update(float dt, World& world)
+void HealthSystem::update(float dt, World& world, GameState &state)
 {
-    // при спавне нужно задать рандомную стартовую анимацию и сделать ресет объектам
-    // необходимо определить условия спавна различных entity на карте
-}
+    if(state != GameState::Playing) return;
 
-void HealthSystem::update(float dt, World& world)
-{
-    if(world.player.health.points == 0)
-        world.player.isEnable = false; // call end game event
+    if(world.player.health.points == 0) {
+        world.player.isEnable = false;
+        state = GameState::GameOver;
+    }
 
     for(auto &bird : world.birds) {
         if(bird.health.points == 0) {
@@ -252,6 +431,8 @@ void HealthSystem::update(float dt, World& world)
 
     for(auto &bomber : world.bombers) {
         if(bomber.health.points == 0) {
+            bomber.isShow = false;
+            bomber.isEnable = false;
             bomber.health = bomber.health_default;
             bomber.movement = bomber.movement_default;
             bomber.transform = bomber.transform_default;
@@ -260,6 +441,16 @@ void HealthSystem::update(float dt, World& world)
         // пока bomb имеет bomb.hasDestroy == false - она существует, в противном случае скрываем объект и делаем его недоступным
         bomber.bomb.isShow = !bomber.bomb.hasDestroy;
         bomber.bomb.isEnable = !bomber.bomb.hasDestroy;
+    }
+
+    for(auto &fighter : world.fighters) {
+        if(fighter.health.points == 0) {
+            fighter.isShow = false;
+            fighter.isEnable = false;
+            fighter.health = fighter.health_default;
+            fighter.movement = fighter.movement_default;
+            fighter.transform = fighter.transform_default;
+        }
     }
 }
 
@@ -285,8 +476,7 @@ void updateAnimation(
     material.texture = frames[animation.frame];
 }
 
-
-void AnimationSystem::update(float dt, World& world)
+void AnimationSystem::update(float dt, World& world, GameState &state)
 {
     if(world.player.isEnable && world.player.isShow) {
         updateAnimation(
@@ -314,16 +504,99 @@ void AnimationSystem::update(float dt, World& world)
                 bomber.animation,
                 bomber.material);
     }
+
+    for (auto& fighter : world.fighters) {
+        if (!fighter.isEnable || !fighter.isShow)
+            continue;
+
+        updateAnimation(
+                dt,
+                fighter.animation,
+                fighter.material);
+    }
+
+    for (auto& bullet : world.playerBullets) {
+        if (!bullet.isEnable || !bullet.isShow)
+            continue;
+
+        updateAnimation(
+                dt,
+                bullet.animation,
+                bullet.material);
+    }
+
+    for (auto& bullet : world.enemyBullets) {
+        if (!bullet.isEnable || !bullet.isShow)
+            continue;
+
+        updateAnimation(
+                dt,
+                bullet.animation,
+                bullet.material);
+    }
 }
 
-void EventSystem::update(float dt, World& world)
+void EventSystem::update(float dt, World& world, GameState& state)
 {
-    // отвечает за события появления бомб, метеоритов или bullets
-    // но смотря какие fabric, смотря сколько details
+    if (state != GameState::Playing)
+        return;
+
+    for (auto& fighter : world.fighters)
+    {
+        if (!fighter.isEnable || !fighter.isShow)
+            continue;
+
+        auto& attack = fighter.attack;
+
+        if (!attack.shooting)
+        {
+            attack.cooldownTimer += dt;
+
+            if (attack.cooldownTimer < attack.cooldown)
+                continue;
+
+            attack.shooting = true;
+            attack.cooldownTimer = 0.0f;
+            attack.intervalTimer = attack.interval; // первая пуля сразу
+            attack.count = 0;
+        }
+
+        attack.intervalTimer += dt;
+
+        if (attack.intervalTimer < attack.interval)
+            continue;
+
+        attack.intervalTimer = 0.0f;
+
+        for (auto& bullet : world.enemyBullets)
+        {
+            if (bullet.isEnable || bullet.isShow)
+                continue;
+
+            bullet.isEnable = true;
+            bullet.isShow = true;
+
+            bullet.transform.position = fighter.transform.position;
+
+            ++attack.count;
+            break;
+        }
+
+        // Очередь закончилась
+        if (attack.count >= attack.maxCount)
+        {
+            attack.shooting = false;
+            attack.count = 0;
+            attack.cooldownTimer = 0.0f;
+            attack.intervalTimer = 0.0f;
+        }
+    }
 }
 
-void UltimateSystem::update(float dt, World& world)
+void UltimateSystem::update(float dt, World& world, GameState &state)
 {
+    if(state != GameState::Playing) return;
+
     // отвечает за событие ультимейта (способности) игрока: проверяет условия, по которым он станет доступен
     // развивая эту систему ее можно переименовать в SpellSystem
 }

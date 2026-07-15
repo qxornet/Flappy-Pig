@@ -1,7 +1,17 @@
-#ifndef PUPPY_BIRD_GLOBAL_H
-#define PUPPY_BIRD_GLOBAL_H
+#ifndef FLAPPY_PIG_GLOBAL_H
+#define FLAPPY_PIG_GLOBAL_H
 
 #include "TextureAsset.h"
+
+enum class GameState
+{
+    MainMenu,
+    Playing,
+    GameOver,
+    Restart,
+    Pause,
+    Exit
+};
 
 union Vector4 {
     struct {
@@ -37,4 +47,4 @@ struct Vertex {
 
 typedef uint16_t Index;
 
-#endif //PUPPY_BIRD_GLOBAL_H
+#endif //FLAPPY_PIG_GLOBAL_H

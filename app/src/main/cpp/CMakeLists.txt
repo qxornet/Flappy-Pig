@@ -16,7 +16,8 @@ add_library(flappypig SHARED
         Game.cpp
         Systems.cpp
         Utility.cpp
-        EntityFactory.cpp)
+        EntityFactory.cpp
+        UIElements.cpp)
 
 # Searches for a package provided by the game activity dependency
 find_package(game-activity REQUIRED CONFIG)
