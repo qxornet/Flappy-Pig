@@ -280,6 +280,7 @@ void CollisionSystem::update(float dt, World& world, GameState &state)
                 bomber.animation.current = AnimationType::Die;
                 bullet.isEnable = false;
                 bullet.isShow = false;
+                world.player.score.count += bomber.cost.count;
             };
         }
     }
@@ -288,7 +289,6 @@ void CollisionSystem::update(float dt, World& world, GameState &state)
     {
         if (!fighter.isShow || !fighter.isEnable)
             continue;
-
 
         float dist = distanceToPlayer(
                 fighter.collision,
@@ -316,6 +316,7 @@ void CollisionSystem::update(float dt, World& world, GameState &state)
                 fighter.animation.current = AnimationType::Die;
                 bullet.isEnable = false;
                 bullet.isShow = false;
+                world.player.score.count += fighter.cost.count;
             };
         }
     }
@@ -420,13 +421,12 @@ void HealthSystem::update(float dt, World& world, GameState &state)
     }
 
     for(auto &bird : world.birds) {
-        if(bird.health.points == 0) {
-            bird.isShow = false;
-            bird.isEnable = false;
-            bird.health = bird.health_default;
-            bird.movement = bird.movement_default;
-            bird.transform = bird.transform_default;
-        }
+        if(bird.health.points != 0) continue;
+        bird.isShow = false;
+        bird.isEnable = false;
+        bird.health = bird.health_default;
+        bird.movement = bird.movement_default;
+        bird.transform = bird.transform_default;
     }
 
     for(auto &bomber : world.bombers) {
@@ -444,13 +444,12 @@ void HealthSystem::update(float dt, World& world, GameState &state)
     }
 
     for(auto &fighter : world.fighters) {
-        if(fighter.health.points == 0) {
-            fighter.isShow = false;
-            fighter.isEnable = false;
-            fighter.health = fighter.health_default;
-            fighter.movement = fighter.movement_default;
-            fighter.transform = fighter.transform_default;
-        }
+        if(fighter.health.points != 0) continue;
+        fighter.isShow = false;
+        fighter.isEnable = false;
+        fighter.health = fighter.health_default;
+        fighter.movement = fighter.movement_default;
+        fighter.transform = fighter.transform_default;
     }
 }
 

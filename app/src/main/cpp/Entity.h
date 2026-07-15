@@ -48,7 +48,6 @@ public:
 
 class Digit : public IEntity, public Renderable
 {
-    int value = 0;
 };
 
 class Background : public IEntity, public Renderable

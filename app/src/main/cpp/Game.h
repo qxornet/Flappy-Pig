@@ -5,6 +5,7 @@
 #include "Renderer.h"
 #include "Systems.h"
 #include "UIElements.h"
+#include "Score.h"
 
 #include <map>
 
@@ -45,6 +46,8 @@ private:
     std::vector<Button> mainMenuButtons;
     std::vector<Button> gameoverButtons;
     Button attackControl;
+
+    ScoreInfo scoreInfo;
 };
 
 #endif //PUPPY_BIRD_GAME_H

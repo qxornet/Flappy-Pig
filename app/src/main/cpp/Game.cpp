@@ -267,6 +267,13 @@ void Game::loadMeshes()
             Vertex(Vector3{0.5, -0.1, 1}, Vector2{0, 1})
     };
 
+    std::vector<Vertex> digitVertices = {
+            Vertex(Vector3{0.4, 0.5, 1}, Vector2{1, 0}),
+            Vertex(Vector3{-0.4, 0.5, 1}, Vector2{0, 0}),
+            Vertex(Vector3{-0.4, -0.5, 1}, Vector2{0, 1}),
+            Vertex(Vector3{0.4, -0.5, 1}, Vector2{1, 1})
+    };
+
     std::vector<Index> indices = {
             0, 1, 2, 0, 2, 3
     };
@@ -283,6 +290,11 @@ void Game::loadMeshes()
     meshStorage[EntityId::ePlayerBullet] = std::make_shared<MeshComponent>(playerBulletVertices, indices);
     meshStorage[EntityId::eTerrain] = std::make_shared<MeshComponent>(vertices, indices);
     meshStorage[EntityId::eBuilding] = std::make_shared<MeshComponent>(vertices, indices);
+
+    scoreInfo.digitMesh = std::make_shared<MeshComponent>(digitVertices, indices);
+    for(auto &digit : scoreInfo.digits) {
+        digit.mesh = scoreInfo.digitMesh;
+    }
 }
 
 void Game::loadTextures()
@@ -365,6 +377,12 @@ void Game::loadTextures()
             TextureAsset::loadAsset(assetManager, "player/bullets/run_anim03.png"),
     };
     textureStorage[EntityId::ePlayerBullet] = playerBulletTextures;
+
+    scoreInfo.textures.resize(10);
+    for (int i = 0; i < 10; ++i) {
+        scoreInfo.textures[i] = TextureAsset::loadAsset(assetManager,"digits/" + std::to_string(i) + ".png");
+    }
+
 }
 
 void Game::createWorld()
@@ -450,4 +468,5 @@ void Game::drawPlayingControls()
 {
     attackControl.transform.position.x = world.borderX - 1.5f;
     renderer.draw(attackControl.mesh, attackControl.transform, attackControl.material);
+    scoreInfo.draw(renderer, world.player.score.count);
 }

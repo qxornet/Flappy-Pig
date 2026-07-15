@@ -124,6 +124,8 @@ Bomber EntityFactory::createBomber()
     bomber.movement.maxSpeed = 1.5f;
     bomber.movement.velocity.x = 0.6f;
 
+    bomber.cost.count = 50;
+
     bomber.animation.clips = textureStorage.at(EntityId::eBomber).clips;
     bomber.animation.frameTime = 0.250f;
 
@@ -164,6 +166,8 @@ Fighter EntityFactory::createFighter()
     fighter.attack.maxCount = 3;
     fighter.attack.cooldown = 1.500f;
     fighter.attack.interval = 0.250f;
+
+    fighter.cost.count = 100;
 
     fighter.movement_default = fighter.movement;
     fighter.transform_default = fighter.transform;
